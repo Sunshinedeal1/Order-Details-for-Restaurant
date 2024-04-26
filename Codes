@@ -1,0 +1,265 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.text.*;
+import java.awt.print.PrinterException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+
+class MenuItem {
+    private String name;
+    private double price;
+
+    public MenuItem(String name, double price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+}
+
+class OrderItem {
+    private MenuItem menuItem;
+    private int quantity;
+
+    public OrderItem(MenuItem menuItem, int quantity) {
+        this.menuItem = menuItem;
+        this.quantity = quantity;
+    }
+
+    public MenuItem getMenuItem() {
+        return menuItem;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getTotalPrice() {
+        return menuItem.getPrice() * quantity;
+    }
+}
+
+class RestaurantGUI extends JFrame implements ActionListener {
+    private ArrayList<MenuItem> menu;
+    private ArrayList<OrderItem> order;
+    private JTextArea orderTextArea;
+    private JLabel totalLabel;
+    private double totalAmount;
+    private JScrollPane jsp;
+    private Container container;
+    private Image backgroundImage;
+    public Color white;
+    public Font f20plain = new Font("Calibri", Font.PLAIN, 20);
+    public Font f20bold = new Font("Calibri", Font.BOLD, 20);
+    public Font f18plain = new Font("Calibri", Font.PLAIN, 18);
+    public Font f18bold = new Font("Calibri", Font.BOLD, 18);
+
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    public RestaurantGUI() {
+        setTitle("Restaurant Management System!");
+        setSize(new Dimension((int)screenSize.getWidth(), (int)screenSize.getHeight())); // Increased size
+        setLayout(null);
+        container = getContentPane();
+
+        white = Color.WHITE;
+        ImageIcon img = new ImageIcon("C:\\Java\\File\\RestaurantManagementSystem\\src\\background.jpg");
+        setIconImage(img.getImage());
+//        getContentPane().setBackground(img.getImage());
+        container.setBackground(Color.BLUE);
+
+        menu = new ArrayList<>();
+        order = new ArrayList<>();
+        totalAmount = 0;
+
+        // Populate menu with some items
+        menu.add(new MenuItem("Pizza", 10.99));
+        menu.add(new MenuItem("Burger", 8.49));
+        menu.add(new MenuItem("Salad", 6.99));
+        menu.add(new MenuItem("Pasta", 12.99));
+        menu.add(new MenuItem("Steak", 15.99));
+        menu.add(new MenuItem("Soup", 5.99));
+//        menu.add(new MenuItem("Sandwich", 7.99));
+        menu.add(new MenuItem("Fries", 3.99));
+        menu.add(new MenuItem("Sushi", 9.99));
+        menu.add(new MenuItem("Ice Cream", 4.99));
+//        menu.add(new MenuItem("Chicken Tikka", 11.99));
+        menu.add(new MenuItem("Fish Fry", 13.99));
+        menu.add(new MenuItem("Milkshake", 4.49));
+        menu.add(new MenuItem("Fajitas", 16.49));
+        menu.add(new MenuItem("Lemonade", 2.99));
+
+
+        JLabel titleLabel = new JLabel ("Restaurant Management System!..");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        titleLabel.setForeground(Color.green);
+        titleLabel.setBounds(650, 20, 500, 40); // Adjusted position
+        add(titleLabel);
+
+
+        JLabel orderLabel = new JLabel("Order:");
+        orderLabel.setBounds(700, 70, 100, 30); // Adjusted position
+        orderLabel.setFont(f20plain);
+        orderLabel.setForeground(white);
+        add(orderLabel);
+
+        JComboBox<String> orderComboBox = new JComboBox<>();
+        orderComboBox.setFont(f18plain);
+        orderComboBox.setBounds(700, 100, 200, 30); // Increased size and adjusted position
+        for (MenuItem item : menu) {
+            orderComboBox.addItem(item.getName() + " - $" + item.getPrice()); // Show item name and price
+        }
+        add(orderComboBox);
+
+        JTextField quantityField = new JTextField("1");
+        quantityField.setBounds(930, 100, 50, 30); // Adjusted position
+        quantityField.setFont(f18bold);
+        add(quantityField);
+        JLabel Quantity = new JLabel("Qnty:");
+        Quantity.setForeground(white);
+        Quantity.setFont(f20plain);
+        Quantity.setBounds(930,70,100,30);
+        add(Quantity);
+        JButton addButton = new JButton("Add");
+        addButton.setBounds(1000, 100, 80, 30);
+        addButton.setFont(f18bold);
+        addButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String itemName = (String) orderComboBox.getSelectedItem();
+                int quantity = Integer.parseInt(quantityField.getText());
+                String itemNameWithoutPrice = itemName.split(" - ")[0];
+                MenuItem item = null;
+                for (MenuItem menuItem : menu) {
+                    if (menuItem.getName().equals(itemNameWithoutPrice)) {
+                        item = menuItem;
+                        break;
+                    }
+                }
+                if (item != null) {
+                    boolean found = false;
+                    for (OrderItem orderItem : order) {
+                        if (orderItem.getMenuItem().getName().equals(itemNameWithoutPrice)) {
+                            orderItem = new OrderItem(item, orderItem.getQuantity() + quantity);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        order.add(new OrderItem(item, quantity));
+
+                    totalAmount += item.getPrice() * quantity;
+                    updateOrder();
+                }
+            }
+        });
+        add(addButton);
+
+        JLabel orderDetailsLabel = new JLabel("Order Details:");
+        orderDetailsLabel.setBounds(700, 270, 150, 20); // Adjusted position
+        orderDetailsLabel.setForeground(white);
+        orderDetailsLabel.setFont(f20plain);
+        add(orderDetailsLabel);
+
+
+        orderTextArea = new JTextArea();
+        orderTextArea.setEditable(false);
+        orderTextArea.setFont(new Font("Calibri", Font.PLAIN, 20));
+
+
+        JScrollPane scrollPane = new JScrollPane(orderTextArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBounds(700, 300, 400, 450); // Increased size and adjusted position
+        scrollPane.setBorder(new EmptyBorder(10,10,10,5));
+        add(scrollPane);
+
+        JButton clearButton = new JButton("Clear Order");
+        clearButton.setBounds(700, 780, 120, 30);
+        clearButton.addActionListener(this);
+        add(clearButton);
+
+        JButton printButton = new JButton("Print Receipt");
+        printButton.setBounds(850, 780, 120, 30);
+        printButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    orderTextArea.print();
+                } catch (PrinterException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        add(printButton);
+
+        totalLabel = new JLabel("Total: $0.00");
+        totalLabel.setForeground(white);
+        totalLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        totalLabel.setBounds(1000, 785, 150, 20); // Adjusted position
+        add(totalLabel);
+
+        JLabel copyright= new JLabel("Copyright Reserved @ shamim khan..");
+        copyright.setBounds(730, 900, 300, 30);
+        copyright.setForeground(Color.red);
+        setFont(new Font("serif", Font.BOLD, 22));
+        add(copyright);
+
+
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getActionCommand().equals("Clear Order")) {
+            order.clear();
+            totalAmount = 0;
+            updateOrder();
+        }
+    }
+
+    private void updateOrder() {
+        StringBuilder orderText = new StringBuilder();
+        double totalPrice = 0;
+
+        orderText.append("Date: ").append(getCurrentDate()).append("\n\n"); // Adding date section
+        orderText.append("------------------------------------------------------\n");
+
+        orderText.append(String.format("%-25s%-10s%-6s%n", "Item", "Quantity", "   Price")); // Adjusted headers
+        orderText.append("------------------------------------------------------\n");
+
+        for (OrderItem item : order) {
+            MenuItem menuItem = item.getMenuItem();
+            double itemPrice = menuItem.getPrice() * item.getQuantity();
+            totalPrice += itemPrice;
+            orderText.append(String.format("%-25s%-10s$%-15.2f%n", menuItem.getName(), " x     " + item.getQuantity() + "    =    ", itemPrice));
+        }
+        orderText.append("------------------------------------------------------\n");
+        orderText.append(String.format("%-45s$%.2f%n", "Total:", totalPrice));
+        orderText.append("------------------------------------------------------\n");
+
+        orderTextArea.setText(orderText.toString());
+
+        totalLabel.setText("Total: $" + String.format("%.2f", totalPrice));
+    }
+
+
+
+    private String getCurrentDate() {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        Date date = new Date();
+        return formatter.format(date);
+    }
+}
+
+public class Restuarant {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(RestaurantGUI::new);
+
+    }
+}
